@@ -29,20 +29,20 @@ static void on_display(void);
 int main(int argc,char** argv)
 {
 
-	//Inicijalizacija prozora
-	glutInit(&argc,argv);
-	glutInitDisplayMode(GLUT_RGB|GLUT_DOUBLE|GLUT_DEPTH);	
-	glutInitWindowSize(1300,800);
+    //Inicijalizacija prozora
+    glutInit(&argc,argv);
+    glutInitDisplayMode(GLUT_RGB|GLUT_DOUBLE|GLUT_DEPTH);   
+    glutInitWindowSize(1300,800);
 
-	glutCreateWindow(argv[0]);
-	
-	  /* Incijalizuju se globalne promenljive. */
-    phi = theta = 0;
+    glutCreateWindow(argv[0]);
+    
+      /* Incijalizuju se globalne promenljive. */
+    phi = theta = 90;
     delta_phi = delta_theta = pi / 90;
     glClearColor(0.75, 0.75, 0.75, 0);
-	glutKeyboardFunc(on_keyboard);
+    glutKeyboardFunc(on_keyboard);
     glutReshapeFunc(on_reshape);
-	glutDisplayFunc(on_display);
+    glutDisplayFunc(on_display);
     x_curr = 0;
     y_curr = 0;
 
@@ -50,8 +50,8 @@ int main(int argc,char** argv)
     y_k =5;
     glutTimerFunc(50, on_timer4, 0);
     glEnable(GL_DEPTH_TEST);
-	glutMainLoop();
-	return 0;
+    glutMainLoop();
+    return 0;
 }
 static void on_reshape(int width, int height)
 {
@@ -61,19 +61,19 @@ static void on_reshape(int width, int height)
     /* Postavljaju se parametri projekcije. */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60, (float) width / height, 1, 1500);
+    gluPerspective(60, (float) width / height, 1, 3000);
 }
 static void on_display(void)
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    /*gluLookAt(1100 * cos(theta) * cos(phi),
+    gluLookAt(1100 * cos(theta) * cos(phi),
               1100 * cos(theta) * sin(phi),
-             1100 + 220*5 * sin(theta),
+             500 + 220*5*sin(theta),
              0,0,0,
-              0, 1, 0);*/
-    gluLookAt(0, 0, 1100, 0, 0, 0, 0, 1, 0); 
+              0, 1, 0);
+    //gluLookAt(0, 0, 1100, 0, 0, 0, 0, 1, 0); 
     glPushMatrix();
         glTranslatef(-880,x,0);
         glColor3f(0, 0, 1);
@@ -104,7 +104,7 @@ static void on_display(void)
         glVertex3f(-900, -580, 0);
         glVertex3f(900,-580, 0);    
     glEnd();
-	glutSwapBuffers();
+    glutSwapBuffers();
 }
 static void on_timer(int value)
 {
