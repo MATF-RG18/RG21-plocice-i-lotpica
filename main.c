@@ -37,8 +37,7 @@ int main(int argc,char** argv)
     glutCreateWindow(argv[0]);
     
       /* Incijalizuju se globalne promenljive. */
-    phi = theta = 90;
-    delta_phi = delta_theta = pi / 90;
+    phi = theta = 0;
     glClearColor(0.75, 0.75, 0.75, 0);
     glutKeyboardFunc(on_keyboard);
     glutReshapeFunc(on_reshape);
@@ -64,39 +63,70 @@ static void on_reshape(int width, int height)
     gluPerspective(60, (float) width / height, 1, 3000);
 }
 static void on_display(void)
-{
+{   
+    GLfloat light_position[] = { 0, 0, 1600, 0 };
+
+    /* Ambijentalna boja svetla. */
+    GLfloat light_ambient[] = { 0.3, 0.3, 0.3, 1 };
+
+    /* Difuzna boja svetla. */
+    GLfloat light_diffuse[] = { 0.9, 0.9, 0.9, 1 };
+
+    /* Spekularna boja svetla. */
+    GLfloat light_specular[] = { 0.9, 0.9, 0.9, 1 };
+
+    GLfloat shininess = 30;
+    
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(1100 * cos(theta) * cos(phi),
-              1100 * cos(theta) * sin(phi),
-             500 + 220*5*sin(theta),
-             0,0,0,
-              0, 1, 0);
-    //gluLookAt(0, 0, 1100, 0, 0, 0, 0, 1, 0); 
+    gluLookAt(0, 0, 1600, 0, 0, 0, 0, 1, 0); 
+    glRotatef(phi,0,1,0);
+    glRotatef(theta,1,0,0);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    //Korisnikova Plocica
+    GLfloat ambient_coeffs1[] = { 0, 0, 0.2, 1 };
+    GLfloat diffuse_coeffs1[] = { 0, 0, 0.6, 1 };
+    GLfloat specular_coeffs1[] = {0, 0, 0.6, 1 };
+     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_coeffs1);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_coeffs1);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular_coeffs1);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
     glPushMatrix();
         glTranslatef(-880,x,0);
         glColor3f(0, 0, 1);
         glScalef(0.2,2,0.2);
-        glutWireCube(100);
+        glutSolidCube(100);
     glPopMatrix();
+    //Racunar plocica
+    GLfloat ambient_coeffs2[] = { 0, 0.2,0, 1 };
+    GLfloat diffuse_coeffs2[] = {0, 0,6,0, 1 };
+    GLfloat specular_coeffs2[] = {0, 0.6,0, 1 };
+     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_coeffs2);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_coeffs2);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular_coeffs2);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
     glPushMatrix();
         glTranslatef(880,y,0);
         glColor3f(0, 1, 0);
         glScalef(0.2,2,0.2);
-        glutWireCube(100);
+        glutSolidCube(100);
     glPopMatrix();
+    //Loptica
+    GLfloat ambient_coeffs3[] = { 0.8, 0, 0, 1 };
+    GLfloat diffuse_coeffs3[] = { 0.8, 0, 0, 1 };
+    GLfloat specular_coeffs3[] = {0.2, 0, 0, 1 };
+     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient_coeffs3);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse_coeffs3);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular_coeffs3);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
     glPushMatrix();
         glColor3f(1,0,0);
         glTranslatef(x_curr,y_curr,0);
         glutSolidSphere(r,50,50);
     glPopMatrix();
-    /*();
-        glColor3f(0.5,0.5,0.5);
-        glTranslatef(-20,0,0);
-        glScalef(2.3,1.5,0);
-        glutSolidCube(800);
-    glPopMatrix();*/
      glColor3f(0, 0, 0);
      glBegin(GL_LINE_LOOP);
         glVertex3f(900, 580, 0);
@@ -104,6 +134,7 @@ static void on_display(void)
         glVertex3f(-900, -580, 0);
         glVertex3f(900,-580, 0);    
     glEnd();
+    
     glutSwapBuffers();
 }
 static void on_timer(int value)
@@ -191,33 +222,26 @@ static void on_keyboard(unsigned char key, int x, int y)
         break;
       case 'p':
         /* Dekrementira se ugao phi i ponovo iscrtava scena. */
-        phi -= delta_phi;
-        if (phi > 2 * pi) {
-            phi -= 2 * pi;
-        } else if (phi < 0) {
-            phi += 2 * pi;
-        }
+        phi+=10;
         glutPostRedisplay();
         break;
       case 't':
         /*
-         * Dekrementira se ugao theta i ponovo iscrtava scena. Ovaj
+         * Dekrementira se ugao theta i ponovo iscrtpava scena. Ovaj
          * ugao se odrzava u intervalu [-89,89] stepeni.
          */
-        theta -= delta_theta;
-        if (theta < -(pi / 2 - pi / 180)) {
-            theta = -(pi / 2 - pi / 180);
-        }
+        theta += 10;
         glutPostRedisplay();
         break;
       case 'R':
         /* Resetuju se uglovi phi i theta na pocetne vrednosti. */
         x=0;
         y=0;
+        phi =0;
+        theta =0;
         timer_active3=0;
         timer_active2 = 0;
         timer_active= 0;
-        phi = theta = 0;
         glutPostRedisplay();
         break;
       case 'T':
@@ -225,20 +249,12 @@ static void on_keyboard(unsigned char key, int x, int y)
          * Inkrementira se ugao theta i ponovo iscrtava scena. Ovaj
          * ugao se odrzava u intervalu [-89,89] stepeni.
          */
-        theta += delta_theta;
-        if (theta > pi / 2 - pi / 180) {
-            theta = pi / 2 - pi / 180;
-        }
+        theta -=10;
         glutPostRedisplay();
         break;
     case 'P':
         /* Inkrementira se ugao phi i ponovo iscrtava scena. */
-        phi += delta_phi;
-        if (phi > 2 * pi) {
-            phi -= 2 * pi;
-        } else if (phi < 0) {
-            phi += 2 * pi;
-        }
+        phi -=10;
         glutPostRedisplay();
         break;
     }
