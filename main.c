@@ -10,22 +10,32 @@ static void on_timer2(int value);
 static void on_timer3(int value);
 static void on_timer4(int value);
 static void on_display(void);
+static void draw_score_igrac(float x,float y);
+static void draw_score_racunar(float x,float y);
 static void on_reshape(int width, int height);
-static float x_curr, y_curr; 
-const static float r = 20;
-static float x_k =25;
-static float y_k = 25;
-static float x;
-static float y;
-static float i;
-static float b;
-
-static float phi, theta;
-static float delta_phi, delta_theta;
-static int timer_active;
-static int timer_active2;
-static int timer_active3;
 static void on_display(void);
+static float x_curr, y_curr; // koordinate loptice
+//Promenljive za crtanje score-a
+static float x_scoreR = 970;
+static float y_scoreR = 560;
+static float x_scoreI = -970;
+static float y_scoreI = 560;
+static int score_igrac = 0;
+static int score_racunar = 0;
+const static float r = 20; // poluprecnik loptice
+static float x_bot;// x_bot ,y_bot su promenljive koje sluze za proracun mesta udarca kuglice na strani racunarove plocice
+static float y_bot;
+static float x_k =45;//x_bot,y_bot brzina loptice
+static float y_k = 45;
+static float x;//promenljiva po kojoj se krece igraceva plocica po y koordinati
+static float y;//promenljiva po kojoj se krece racunar plocica po y koordinati
+static float i;//pomeraj igraceve plocice
+static float b;
+static float phi, theta;//uglovi kamere
+static int timer_active;// flag timer za igracevu plocicu
+static int timer_active2;// flag timer za racunar plocice
+static int timer_active3;// flag timer za lopticu
+
 int main(int argc,char** argv)
 {
 
@@ -35,16 +45,16 @@ int main(int argc,char** argv)
     glutInitWindowSize(1300,800);
 
     glutCreateWindow(argv[0]);
-    
-      /* Incijalizuju se globalne promenljive. */
+    //Inicijalizacija ugla kamere
     phi = theta = 0;
     glClearColor(0.75, 0.75, 0.75, 0);
     glutKeyboardFunc(on_keyboard);
     glutReshapeFunc(on_reshape);
     glutDisplayFunc(on_display);
+    //Inicijalizacija pocetnik koordinata loptice
     x_curr = 0;
     y_curr = 0;
-
+    //pomeraj loptice 
     x_k =5;
     y_k =5;
     glutTimerFunc(50, on_timer4, 0);
@@ -54,10 +64,7 @@ int main(int argc,char** argv)
 }
 static void on_reshape(int width, int height)
 {
-    /* Postavlja se viewport. */
     glViewport(0, 0, width, height);
-
-    /* Postavljaju se parametri projekcije. */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(60, (float) width / height, 1, 3000);
@@ -65,18 +72,10 @@ static void on_reshape(int width, int height)
 static void on_display(void)
 {   
     GLfloat light_position[] = { 0, 0, 1600, 0 };
-
-    /* Ambijentalna boja svetla. */
     GLfloat light_ambient[] = { 0.3, 0.3, 0.3, 1 };
-
-    /* Difuzna boja svetla. */
     GLfloat light_diffuse[] = { 0.9, 0.9, 0.9, 1 };
-
-    /* Spekularna boja svetla. */
     GLfloat light_specular[] = { 0.9, 0.9, 0.9, 1 };
-
     GLfloat shininess = 30;
-    
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
@@ -86,6 +85,8 @@ static void on_display(void)
     glRotatef(theta,1,0,0);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
+
+
     //Korisnikova Plocica
     GLfloat ambient_coeffs1[] = { 0, 0, 0.2, 1 };
     GLfloat diffuse_coeffs1[] = { 0, 0, 0.6, 1 };
@@ -134,7 +135,8 @@ static void on_display(void)
         glVertex3f(-900, -580, 0);
         glVertex3f(900,-580, 0);    
     glEnd();
-    
+    draw_score_igrac(x_scoreI,y_scoreI);
+    draw_score_racunar(x_scoreR,y_scoreR);
     glutSwapBuffers();
 }
 static void on_timer(int value)
@@ -152,7 +154,21 @@ static void on_timer2(int value)
 {
     if (value != 0)
         return;
-    y+=b;
+    // timer koji vrsi pomeranje racunar plocice
+
+    // racunanje funkcije prave kretanja loptice u svakom trenutku kako bi plocica znala kuda da se krece
+    float koef = y_k/x_k;
+    float n = x_curr*koef + y_curr;
+    x_bot = -880;
+    y_bot = x_bot*koef + n;
+
+    if(y_bot >= -560 && y_bot <= 560)
+    {
+        if(y_bot > y)
+            y+=b;
+        else if(y_bot < y)
+            y-=b;
+    }
     if(y+b >= 480 || y+b<= -480)
         b*=-1;
     if(timer_active2)
@@ -162,18 +178,30 @@ static void on_timer3(int value)
 {
     if (value != 0)
         return;
-
+    // timer za kretanje loptice
     y_curr += y_k;
+    // provera da li loptica udara u gornju ili donju ivicu
     if(y_curr>=560 || y_curr <=-560)
         y_k*=-1;
 
-    x_curr-= x_k;
-   if((y_curr>=(x-100) && y_curr<=(x+100) && x_curr == -860) || (y_curr>=(x-100) && y_curr<=(x+100) && x_curr == 860))
+    x_curr-= x_k; // vrsi se pomeranje loptice
+   if((y_curr>=(x-100) && y_curr<=(x+100) && x_curr == -860) || (y_curr>=(y-100) && y_curr<=(y+100) && x_curr == 860))
     {
+        //provera da li loptica udara u plocice
         x_k*=-1;
     }
-   else if(x_curr <= -880 || x_curr >= 880)
+   else if(x_curr <= -880)
    {
+        //racunanje score-a 
+        score_racunar ++;
+        x_curr = 0;
+        y_curr = 0;
+        timer_active3 = 0;
+        return;
+   }
+   else if(x_curr >= 880)
+   {
+        score_igrac++;
         x_curr = 0;
         y_curr = 0;
         timer_active3 = 0;
@@ -182,10 +210,13 @@ static void on_timer3(int value)
     if(timer_active3)
         glutTimerFunc(20, on_timer3, 0);
 }
+
 static void on_timer4(int value)
 {
     if (value != 0)
         return;
+    // ovaj timer sluzi kako bi u svakom momentu timera iscrtavao glutPostRedisplay 
+    // da ne bi dolazilo do "seckanja"
     glutPostRedisplay();
     glutTimerFunc(50, on_timer4, 0);
 }
@@ -199,42 +230,48 @@ static void on_keyboard(unsigned char key, int x, int y)
         break;
 
     case 'g':
-            i = -25;
+            i = 25;// pomeraj "na gore"
             glutTimerFunc(10, on_timer, 0);
         break;
-    case 'h':
-            i =25;
+    case 'f':
+            i =-25;// pomeraj "na dole" 
             glutTimerFunc(10, on_timer, 0);
         break;
     case 'r': 
+    //pokrecemo racunar plocicu u default modu 
+      if (!timer_active2) {
+            timer_active2 = 1;
+            b = 3;
+            glutTimerFunc(10, on_timer2, 0);
+        }
+        break;
+      case 'e': 
+    //pokrecemo racunar plocicu u easy modu
+      if (!timer_active2) {
+            timer_active2 = 1;
+            b = 2;
+            glutTimerFunc(10, on_timer2, 0);
+        }
+        break;   
+    case 'h': 
+    //pokrecemo racunar plocicu u hard modu
       if (!timer_active2) {
             timer_active2 = 1;
             b = 5;
             glutTimerFunc(10, on_timer2, 0);
         }
-        break;
+        break; 
     case 'G':
-        /* Pokrece se animacija. */
+        //pokrecemo lopticu
         if (!timer_active3) {
             glutTimerFunc(20, on_timer3, 0);
             timer_active3 = 1;
         }
         break;
-      case 'p':
-        /* Dekrementira se ugao phi i ponovo iscrtava scena. */
-        phi+=10;
-        glutPostRedisplay();
-        break;
-      case 't':
-        /*
-         * Dekrementira se ugao theta i ponovo iscrtpava scena. Ovaj
-         * ugao se odrzava u intervalu [-89,89] stepeni.
-         */
-        theta += 10;
-        glutPostRedisplay();
-        break;
       case 'R':
-        /* Resetuju se uglovi phi i theta na pocetne vrednosti. */
+        //Resetuje se sve i vraca u pocetni polozaj 
+        score_racunar = 0;
+        score_igrac = 0;
         x=0;
         y=0;
         phi =0;
@@ -244,18 +281,102 @@ static void on_keyboard(unsigned char key, int x, int y)
         timer_active= 0;
         glutPostRedisplay();
         break;
+    //tasteri p,P,t,T sluze za rotiranje kamere(odnosno scene)
+      case 'p':
+        phi+=10;
+        glutPostRedisplay();
+        break;
+      case 't':
+        theta += 10;
+        glutPostRedisplay();
+        break;
       case 'T':
-        /*
-         * Inkrementira se ugao theta i ponovo iscrtava scena. Ovaj
-         * ugao se odrzava u intervalu [-89,89] stepeni.
-         */
         theta -=10;
         glutPostRedisplay();
         break;
     case 'P':
-        /* Inkrementira se ugao phi i ponovo iscrtava scena. */
         phi -=10;
         glutPostRedisplay();
         break;
     }
+}
+//u zavisnosti od score-a racunara i igraca iscrtava se potreban broj kuglica za rezultat
+static void draw_score_racunar(float x,float y)
+{   
+
+    if(score_racunar >= 1)
+    {
+        glPushMatrix();
+            glTranslatef(x,y,0);
+            glutSolidSphere(25,50,50);
+        glPopMatrix();
+    }
+    if(score_racunar >=2)
+    {
+        glPushMatrix();
+        glTranslatef(x,y-60,0);
+        glutSolidSphere(25,50,50);
+    glPopMatrix();
+    }  
+    if(score_racunar >= 3) 
+    {
+        glPushMatrix();
+            glTranslatef(x,y-120,0);
+            glutSolidSphere(25,50,50);
+        glPopMatrix();
+    }
+    if(score_racunar >= 4)
+    {
+        glPushMatrix();
+            glTranslatef(x,y-180,0);
+            glutSolidSphere(25,50,50);
+        glPopMatrix();
+    }
+    if(score_racunar >= 5)
+    {
+        glPushMatrix();
+            glTranslatef(x,y-240,0);
+            glutSolidSphere(25,50,50);
+        glPopMatrix();
+    }
+    glDisable(GL_CLIP_PLANE1);
+}
+static void draw_score_igrac(float x,float y)
+{   
+    if(score_igrac >= 1)
+    {
+        glPushMatrix();
+            glTranslatef(x,y,0);
+            glutSolidSphere(25,50,50);
+        glPopMatrix();
+    }
+    if(score_igrac >=2)
+    {
+        glPushMatrix();
+        glTranslatef(x,y-60,0);
+        glutSolidSphere(25,50,50);
+    glPopMatrix();
+    }  
+    if(score_igrac >= 3) 
+    {
+        glPushMatrix();
+            glTranslatef(x,y-120,0);
+            glutSolidSphere(25,50,50);
+        glPopMatrix();
+    }
+    if(score_igrac >= 4)
+    {
+        glPushMatrix();
+            glTranslatef(x,y-180,0);
+            glutSolidSphere(25,50,50);
+        glPopMatrix();
+    }
+    if(score_igrac >= 5)
+    {
+        glPushMatrix();
+            glTranslatef(x,y-240,0);
+            glutSolidSphere(25,50,50);
+        glPopMatrix();
+    }
+    glDisable(GL_CLIP_PLANE1);
 }
