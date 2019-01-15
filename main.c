@@ -10,7 +10,7 @@ static GLuint names[2];
 static float matrix[16];
 #define pi 3.14
 static void displayText( float x, float y, int r, int g, int b, const char *string );
-static void on_keyboard(unsigned char key, int a, int b);
+static void on_keyboard(unsigned char key, int a, int c);
 static void initialize(void);
 static void on_timer(int value);
 static void on_timer2(int value);
@@ -34,8 +34,8 @@ static float x_bot;// x_bot ,y_bot su promenljive koje sluze za proracun mesta u
 static float y_bot;
 static float x_k =45;//x_bot,y_bot brzina loptice
 static float y_k = 45;
-static float x =0;//promenljiva po kojoj se krece igraceva plocica po y koordinati
-static float y=0;//promenljiva po kojoj se krece racunar plocica po y koordinati
+static float x;//promenljiva po kojoj se krece igraceva plocica po y koordinati
+static float y;//promenljiva po kojoj se krece racunar plocica po y koordinati
 static float i;//pomeraj igraceve plocice
 static float b;
 static float phi, theta;//uglovi kamere
@@ -271,7 +271,7 @@ static void on_timer4(int value)
         glutTimerFunc(50, on_timer4, 0);
 }
 
-static void on_keyboard(unsigned char key, int a, int b)
+static void on_keyboard(unsigned char key, int a, int c)
 {
     switch (key) {
     case 27:
